@@ -1,0 +1,2 @@
+SELECT Goods_Sk.SkladId,Goods.Name, Goods_Sk.Quantity FROM Goods_Sk INNER JOIN Goods ON Goods_Sk.GoodId = Goods.GoodsId WHERE 
+Goods_Sk.SkladId = (SELECT Sklads.SkladsId FROM Sklads WHERE Sklads.AptekisID = 2)
