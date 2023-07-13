@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data.SqlClient;
 
 namespace ConsoleApteki
 {
-    internal class ComingGS
+    internal class ComingGS : ARemove_Add
     {
         string connectionString;
         bool result = false;
@@ -100,7 +95,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out SkladId);
                         if (result)
                         {
-                            Add(GoodId, Quantity, SkladId);
+                            Add($"INSERT INTO Goods_Sk (GoodId, Quantity, SkladId) VALUES (N'{GoodId}', N'{Quantity}', N'{SkladId}')", connectionString);
 
                         }
                         else
@@ -119,7 +114,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out SkId);
                         if (result)
                         {
-                            Remove(SkId);
+                            Remove($"DELETE FROM Goods_Sk WHERE SkId={SkId}", connectionString);
                         }
                         else
                         {
@@ -141,51 +136,6 @@ namespace ConsoleApteki
 
             }
             return 6;
-        }
-
-        private void Remove(int skId)
-        {
-            string sqlExpression = $"DELETE FROM Goods_Sk WHERE SkId={skId}";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Удалено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-        }
-
-        private void Add(int goodId, int quantity, int skladId)
-        {
-            string sqlExpression = $"INSERT INTO Goods_Sk ( GoodId, Quantity, SkladId) VALUES (N'{goodId}', N'{quantity}', N'{skladId}')";
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
         }
     }
 }

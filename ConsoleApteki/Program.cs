@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using System.Text;
 
 namespace ConsoleApteki
@@ -7,24 +6,41 @@ namespace ConsoleApteki
     internal class Program
     {
         static string connectionString = @$"Data Source=(LocalDB)\MSSQLLocalDB; AttachDbFilename = {Environment.CurrentDirectory}\TestDbA.mdf; Integrated Security = True";
-        //static string connectionStringN = @$"Data Source=(LocalDB)\MSSQLLocalDB; AttachDbFilename = {Environment.CurrentDirectory}\MyDatabaseData.mdf; Integrated Security = True";
+        //static string connectionString = @$"Data Source=(LocalDB)\MSSQLLocalDB; AttachDbFilename = {Environment.CurrentDirectory}\MyDatabaseData.mdf; Integrated Security = True";
         //static readonly string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDB; AttachDbFilename = D:\DataBaseSQL\TestDbA.mdf; Integrated Security = True";
         static void Main(string[] args)
         {
-            var filename = Path.Combine(Environment.CurrentDirectory+@"\", "TestDbA.mdf");
+            var filename = Path.Combine(Environment.CurrentDirectory + @"\", "TestDbA.mdf");
             if (!File.Exists(filename))
             {
-                CreateSqlDatabase(filename);
-                CreateSqlTable_Aptekis();
-                CreateSqlTable_Sklads();
-                Thread.Sleep(3000);
-                CreateSqlTable_Goods();
-                Thread.Sleep(3000);
-                CreateSqlTable_Goods_Ap();
-                Thread.Sleep(3000);
-                CreateSqlTable_Goods_Sk();
-                Thread.Sleep(3000);
-                CreateSqlTable_Parties();
+                // Создание БД
+                ICreate createTDB = new CreateTDB(filename);
+                createTDB.CreateDB();
+
+                // Создание Таблицы Aptekis
+                ICreate ct_aptekis = new CreateTDB("CREATE TABLE[dbo].[Aptekis]([AptekisId] INT IDENTITY(1, 1) NOT NULL, [Name] NVARCHAR(100) NULL, [Adress] NVARCHAR(200) NULL, [Phone] NVARCHAR(50) NULL, CONSTRAINT[PK_Aptekis] PRIMARY KEY CLUSTERED([AptekisId] ASC));", connectionString);
+                ct_aptekis.CreateTable();
+
+                // Создание Таблицы Goods
+                ICreate ct_goods = new CreateTDB("CREATE TABLE [dbo].[Goods] ([GoodsId] INT IDENTITY (1, 1) NOT NULL, [Name] NVARCHAR (100) NULL, CONSTRAINT [PK_Goods] PRIMARY KEY CLUSTERED ([GoodsId] ASC));", connectionString);
+                ct_goods.CreateTable();
+
+                // Создание таблицы Sklads
+                ICreate ct_sklads = new CreateTDB("CREATE TABLE [dbo].[Sklads] ([SkladsId] INT IDENTITY (1, 1) NOT NULL, [AptekisID] INT NOT NULL, [Name] NVARCHAR (100) NULL, CONSTRAINT [PK_Sklads] PRIMARY KEY CLUSTERED ([SkladsId] ASC), CONSTRAINT [FK_Sklads_To_Aptekis] FOREIGN KEY ([AptekisID]) REFERENCES [dbo].[Aptekis] ([AptekisId]) ON DELETE CASCADE);", connectionString);
+                ct_sklads.CreateTable();
+
+                // Создание таблицы Goods_Ap
+                ICreate ct_goods_ap = new CreateTDB("CREATE TABLE [dbo].[Goods_Ap] ([GaId] INT IDENTITY (1, 1) NOT NULL, [GoodId] INT NOT NULL, [Quantity] INT DEFAULT ((0)) NOT NULL, [AptekaId] INT NOT NULL, CONSTRAINT [PK_Goods_Ap] PRIMARY KEY CLUSTERED ([GaId] ASC), CONSTRAINT [FK_Goods_Ap_To_Goods] FOREIGN KEY ([GoodId]) REFERENCES [dbo].[Goods] ([GoodsId]) ON DELETE CASCADE, CONSTRAINT [FK_Goods_Ap_To_Aptekis] FOREIGN KEY ([AptekaId]) REFERENCES [dbo].[Aptekis] ([AptekisId]) ON DELETE CASCADE);", connectionString);
+                ct_goods_ap.CreateTable();
+
+                // Создание таблицы Goods_Sk
+                ICreate ct_goods_sk = new CreateTDB("CREATE TABLE[dbo].[Goods_Sk]([SkId] INT IDENTITY(1, 1) NOT NULL, [GoodId] INT NOT NULL, [Quantity] INT DEFAULT((0)) NOT NULL, [SkladId] INT NOT NULL, CONSTRAINT[PK_Goods_Sk] PRIMARY KEY CLUSTERED([SkId] ASC), CONSTRAINT[FK_Goods_Sk_To_Goods] FOREIGN KEY([GoodId]) REFERENCES[dbo].[Goods]([GoodsId]) ON DELETE CASCADE, CONSTRAINT[FK_Goods_Sk_To_Sklads] FOREIGN KEY([SkladId]) REFERENCES[dbo].[Sklads]([SkladsId]) ON DELETE CASCADE);", connectionString);
+                ct_goods_sk.CreateTable();
+
+                // Создание таблицы Parties
+                ICreate ct_parties = new CreateTDB("CREATE TABLE [dbo].[Parties] ([PartiesId] INT NOT NULL, [GoodId] INT NOT NULL, [SkladId] INT NOT NULL, [QuantityP] INT DEFAULT ((0)) NOT NULL, CONSTRAINT [PK_Parties] PRIMARY KEY CLUSTERED ([PartiesId] ASC), CONSTRAINT [FK_Parties_To_Goods] FOREIGN KEY ([GoodId]) REFERENCES [dbo].[Goods] ([GoodsId]) ON DELETE CASCADE, CONSTRAINT [FK_Parties_To_Sklads] FOREIGN KEY ([SkladId]) REFERENCES [dbo].[Sklads] ([SkladsId]) ON DELETE CASCADE);", connectionString);
+                ct_parties.CreateTable();
+
             }
 
 
@@ -57,7 +73,7 @@ namespace ConsoleApteki
             int number = 0;
             while (true)
             {
-                switch(number)
+                switch (number)
                 {
                     case 0: number = Menu1(); break;
                     case 1: number = aptekis.Menu2A(); break;
@@ -88,9 +104,9 @@ namespace ConsoleApteki
             Console.WriteLine(("").PadRight(30, '='));
             Console.WriteLine("Для выхода из программы нажмите 0");
             Console.Write("Введитe номер: ");
-            string? input  = Console.ReadLine();
+            string? input = Console.ReadLine();
             result = int.TryParse(input, out number);
-            if(result)
+            if (result)
             {
                 switch (number)
                 {
@@ -109,7 +125,9 @@ namespace ConsoleApteki
                         break;
                 }
 
-            } else {
+            }
+            else
+            {
                 Console.Clear();
                 Console.WriteLine("Введено не число, повторите ввод снова");
                 Console.WriteLine("Нажмите любую кнопку для продолжения..");
@@ -117,9 +135,9 @@ namespace ConsoleApteki
             }
             return 0;
         }
-        
+
         // Создание Базы данных mdf файла и Таблиц
-        private static void CreateSqlDatabase(string filename)
+        /*private static void CreateSqlDatabase(string filename)
         {
             string connectionStringDB = @"Data Source = (localdb)\MSSQLLocalDB;Initial Catalog = master; Integrated Security = True";
 
@@ -138,17 +156,65 @@ namespace ConsoleApteki
                     command.ExecuteNonQuery();
                 }
             }
-        }
-        private static void CreateSqlTable_Aptekis()
+        }*/
+    }
+
+    internal interface ICreate
+    {
+        void CreateDB();
+        void CreateTable();
+    }
+
+    internal class CreateTDB : ICreate
+    {
+        string? SqlExpression;
+        string? ConnectionString;
+        string? Filename;
+
+        public CreateTDB(string filename)
         {
-            string sqlExpression = "CREATE TABLE [dbo].[Aptekis] ([AptekisId] INT IDENTITY (1, 1) NOT NULL, [Name] NVARCHAR (100) NULL, [Adress] NVARCHAR (200) NULL, [Phone] NVARCHAR (50) NULL, CONSTRAINT [PK_Aptekis] PRIMARY KEY CLUSTERED ([AptekisId] ASC));";
+            this.Filename = filename;
+        }
+        public CreateTDB(string sqlExpression, string connectionString)
+        {
+            this.SqlExpression = sqlExpression;
+            this.ConnectionString = connectionString;
+        }
+
+        public void CreateDB()
+        {
+            string connectionStringDB = @"Data Source = (localdb)\MSSQLLocalDB;Initial Catalog = master; Integrated Security = True";
+
+            string? databaseName = Path.GetFileNameWithoutExtension(Filename);
+            if (databaseName != null)
+            {
+                using (SqlConnection connection = new(connectionStringDB))
+                {
+                    connection.Open();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText =
+                            String.Format("CREATE DATABASE {0} ON PRIMARY (NAME={0}, FILENAME='{1}')", databaseName, Filename);
+                        command.ExecuteNonQuery();
+
+                        command.CommandText =
+                            String.Format("EXEC sp_detach_db '{0}', 'true'", databaseName);
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+
+        }
+
+        public void CreateTable()
+        {
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
                     connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
+                    SqlCommand command = new SqlCommand(SqlExpression, connection);
                     int number = command.ExecuteNonQuery();
                     Console.WriteLine("Добавлено объектов: {0}", number);
                 }
@@ -161,128 +227,6 @@ namespace ConsoleApteki
                 Console.ReadKey();
             }
 
-
         }
-        private static void CreateSqlTable_Goods()
-        {
-            string sqlExpression = "CREATE TABLE [dbo].[Goods] ([GoodsId] INT IDENTITY (1, 1) NOT NULL, [Name] NVARCHAR (100) NULL, CONSTRAINT [PK_Goods] PRIMARY KEY CLUSTERED ([GoodsId] ASC));";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-
-
-        }
-        private static void CreateSqlTable_Goods_Ap()
-        {
-            string sqlExpression = "CREATE TABLE [dbo].[Goods_Ap] ([GaId] INT IDENTITY (1, 1) NOT NULL, [GoodId] INT NOT NULL, [Quantity] INT DEFAULT ((0)) NOT NULL, [AptekaId] INT NOT NULL, CONSTRAINT [PK_Goods_Ap] PRIMARY KEY CLUSTERED ([GaId] ASC), CONSTRAINT [FK_Goods_Ap_To_Goods] FOREIGN KEY ([GoodId]) REFERENCES [dbo].[Goods] ([GoodsId]) ON DELETE CASCADE, CONSTRAINT [FK_Goods_Ap_To_Aptekis] FOREIGN KEY ([AptekaId]) REFERENCES [dbo].[Aptekis] ([AptekisId]) ON DELETE CASCADE);";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-
-
-        }
-        private static void CreateSqlTable_Goods_Sk()
-        {
-            string sqlExpression = "CREATE TABLE [dbo].[Goods_Sk] ([SkId] INT IDENTITY (1, 1) NOT NULL, [GoodId] INT NOT NULL, [Quantity] INT DEFAULT ((0)) NOT NULL, [SkladId] INT NOT NULL, CONSTRAINT [PK_Goods_Sk] PRIMARY KEY CLUSTERED ([SkId] ASC), CONSTRAINT [FK_Goods_Sk_To_Goods] FOREIGN KEY ([GoodId]) REFERENCES [dbo].[Goods] ([GoodsId]) ON DELETE CASCADE, CONSTRAINT [FK_Goods_Sk_To_Sklads] FOREIGN KEY ([SkladId]) REFERENCES [dbo].[Sklads] ([SkladsId]) ON DELETE CASCADE);";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-
-
-        }
-        private static void CreateSqlTable_Parties()
-        {
-            string sqlExpression = "CREATE TABLE [dbo].[Parties] ([PartiesId] INT NOT NULL, [GoodId] INT NOT NULL, [SkladId] INT NOT NULL, [QuantityP] INT DEFAULT ((0)) NOT NULL, CONSTRAINT [PK_Parties] PRIMARY KEY CLUSTERED ([PartiesId] ASC), CONSTRAINT [FK_Parties_To_Goods] FOREIGN KEY ([GoodId]) REFERENCES [dbo].[Goods] ([GoodsId]) ON DELETE CASCADE, CONSTRAINT [FK_Parties_To_Sklads] FOREIGN KEY ([SkladId]) REFERENCES [dbo].[Sklads] ([SkladsId]) ON DELETE CASCADE);";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-
-
-        }
-        private static void CreateSqlTable_Sklads()
-        {
-            string sqlExpression = "CREATE TABLE [dbo].[Sklads] ([SkladsId] INT IDENTITY (1, 1) NOT NULL, [AptekisID] INT NOT NULL, [Name] NVARCHAR (100) NULL, CONSTRAINT [PK_Sklads] PRIMARY KEY CLUSTERED ([SkladsId] ASC), CONSTRAINT [FK_Sklads_To_Aptekis] FOREIGN KEY ([AptekisID]) REFERENCES [dbo].[Aptekis] ([AptekisId]) ON DELETE CASCADE);";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-
-
-        }
-
     }
 }

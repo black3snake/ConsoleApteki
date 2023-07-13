@@ -1,8 +1,9 @@
-﻿using System.Data.SqlClient;
+﻿using System;
+using System.Data.SqlClient;
 
 namespace ConsoleApteki
 {
-    internal class ComingGA
+    internal class ComingGA : ARemove_Add
     {
         string connectionString;
         bool result = false;
@@ -97,7 +98,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out AptekaId);
                         if (result)
                         {
-                            Add(GoodId, Quantity, AptekaId);
+                            Add($"INSERT INTO Goods_Ap (GoodId, Quantity, AptekaId) VALUES (N'{GoodId}', N'{Quantity}', N'{AptekaId}')", connectionString);
 
                         } else
                         {
@@ -115,7 +116,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out GaId);
                         if (result)
                         {
-                            Remove(GaId);
+                            Remove($"DELETE FROM Goods_Ap WHERE GaId={GaId}", connectionString);
                         }
                         else
                         {
@@ -137,52 +138,6 @@ namespace ConsoleApteki
 
             }
             return 5;
-        }
-
-        private void Remove(int gaId)
-        {
-            string sqlExpression = $"DELETE FROM Goods_Ap WHERE GaId={gaId}";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Удалено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-        }
-
-        private void Add(int goodId, int quantity, int aptekaId)
-        {
-            string sqlExpression = $"INSERT INTO Goods_Ap (GoodId, Quantity, AptekaId) VALUES (N'{goodId}', N'{quantity}', N'{aptekaId}')";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
         }
     }
 }

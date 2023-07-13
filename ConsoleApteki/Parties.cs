@@ -2,7 +2,7 @@
 
 namespace ConsoleApteki
 {
-    internal class Parties
+    internal class Parties : ARemove_Add
     {
         string connectionString;
         bool result = false;
@@ -106,7 +106,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out QuantityP);
                         if (result)
                         {
-                            Add(PartiesId, GoodId, SkladId, QuantityP);
+                            Add($"INSERT INTO Parties ( PartiesId, GoodId, SkladId, QuantityP) VALUES (N'{PartiesId}', N'{GoodId}', N'{SkladId}', N'{QuantityP}')", connectionString);
                         }
                         else
                         {
@@ -124,7 +124,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out PartiesId);
                         if (result)
                         {
-                            Remove(PartiesId);
+                            Remove($"DELETE FROM Parties WHERE PartiesId={PartiesId}", connectionString);
                         }
                         else
                         {
@@ -146,52 +146,6 @@ namespace ConsoleApteki
 
             }
             return 4;
-        }
-
-        private void Remove(int partiesId)
-        {
-            string sqlExpression = $"DELETE FROM Parties WHERE PartiesId={partiesId}";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Удалено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-        }
-
-        private void Add(int partiesId, int goodId, int skladId, int quantityP)
-        {
-            string sqlExpression = $"INSERT INTO Parties ( PartiesId, GoodId, SkladId, QuantityP) VALUES (N'{partiesId}', N'{goodId}', N'{skladId}', N'{quantityP}')";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
         }
     }
 }

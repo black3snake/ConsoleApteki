@@ -1,9 +1,11 @@
 ﻿using System.Data.SqlClient;
+using System.Numerics;
 using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 
 namespace ConsoleApteki
 {
-    internal class Aptekis
+    internal class Aptekis : ARemove_Add
     {
         string connectionString;
         int number;
@@ -74,7 +76,8 @@ namespace ConsoleApteki
                         AptekaAdress = Console.ReadLine();
                         Console.WriteLine("Введите Номер телефона Аптеки:");
                         AptekaPhone = Console.ReadLine();
-                        Add(AptekaName, AptekaAdress, AptekaPhone);
+
+                        Add($"INSERT INTO Aptekis (Name, Adress, Phone) VALUES (N'{AptekaName}',N'{AptekaAdress}', N'{AptekaPhone}')", connectionString);
                         break;
 
                     case 2:
@@ -83,7 +86,7 @@ namespace ConsoleApteki
                         result = int.TryParse(input, out AptekisId);
                         if (result)
                         {
-                            Remove(AptekisId);
+                            Remove($"DELETE FROM Aptekis WHERE AptekisId={AptekisId}", connectionString);
                         }
                         else
                         {
@@ -204,52 +207,6 @@ namespace ConsoleApteki
             }
             /*Console.WriteLine("Нажмите любую кнопку для продолжения..");
             Console.ReadKey();*/
-        }
-
-        void Add(string? Name, string? aptekaAdress, string? Phone)
-        {
-            string sqlExpression = $"INSERT INTO Aptekis (Name, Adress, Phone) VALUES (N'{Name}',N'{aptekaAdress}', N'{Phone}')";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Добавлено объектов: {0}", number);
-                }
-
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
-
-        }
-
-        void Remove(int id)
-        {
-            string sqlExpression = $"DELETE FROM Aptekis WHERE AptekisId={id}";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    int number = command.ExecuteNonQuery();
-                    Console.WriteLine("Удалено объектов: {0}", number);
-                }
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Возникла ошибка записи в БД, проверте вводимые данные");
-                Console.WriteLine("Нажмите любую кнопку для продолжения..");
-                Console.ReadKey();
-            }
         }
 
         public void ShowAptekisID()

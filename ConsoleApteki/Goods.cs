@@ -2,7 +2,7 @@
 
 namespace ConsoleApteki
 {
-    internal class Goods
+    internal class Goods : ARemove_Add
     {
         string connectionString;
         bool result = false;
@@ -63,16 +63,18 @@ namespace ConsoleApteki
                     case 1:
                         Console.WriteLine("Введите Наименование Товара:");
                         GoodName = Console.ReadLine();
-                        Add(GoodName);
+                        //Add(GoodName);
+                        Add($"INSERT INTO Goods ( Name) VALUES (N'{GoodName}')", connectionString);
                         break;
 
                     case 2:
-                        Console.WriteLine("Введите SkladsId Склада для удаления из базы:");
+                        Console.WriteLine("Введите GoodId Товара для удаления из базы:");
                         input = Console.ReadLine();
                         result = int.TryParse(input, out GoodId);
                         if (result)
                         {
-                            Remove(GoodId);
+                            //Remove(GoodId);
+                            Remove($"DELETE FROM Goods WHERE GoodsId={GoodId}", connectionString);
                         }
                         else
                         {
@@ -96,7 +98,7 @@ namespace ConsoleApteki
             return 3;
         }
 
-        private void Remove(int goodId)
+        /*private void Remove(int goodId)
         {
             string sqlExpression = $"DELETE FROM Goods WHERE GoodsId={goodId}";
 
@@ -140,7 +142,7 @@ namespace ConsoleApteki
                 Console.WriteLine("Нажмите любую кнопку для продолжения..");
                 Console.ReadKey();
             }
-        }
+        }*/
 
         public void ShowGoodsID()
         {
